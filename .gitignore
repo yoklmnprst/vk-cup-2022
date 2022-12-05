@@ -1,0 +1,11 @@
+*~
+## OS X temporary files that should never be commited
+.DS_Store
+*.swp
+*.lock
+## Xcode temporary files that should never be commited
+*~.nib
+*.xcworkspacedata
+*.xcworkspace
+*xcuserdata*
+
