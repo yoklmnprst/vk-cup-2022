@@ -40,7 +40,7 @@ class ViewController: UIViewController {
         button.titleLabel?.textColor = .white
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         button.alpha = 0.9
-        button.layoutAddBorder(spaces: UIEdgeInsets(top: 9, left: 13, bottom: 13, right: 11))
+        button.layoutAddBorder(spaces: UIEdgeInsets(top: 9.5, left: 13.5, bottom: 10.5, right: 13.5))
         button.layer.cornerRadius = 20
         button.backgroundColor = .grayvk
                 
@@ -48,6 +48,7 @@ class ViewController: UIViewController {
         button.setContentHuggingPriority(.defaultLow+1, for: .horizontal)
         let hstack = UIStackView(arrangedSubviews: [label, button])
         hstack.axis = .horizontal
+        hstack.alignment = .center
         hstack.spacing = 12
         
         return hstack
