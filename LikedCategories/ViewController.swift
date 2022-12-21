@@ -1,12 +1,78 @@
 import UIKit
 
 
+extension UIStackView {
+    
+    // dummy class, not really used in view hierarchy,
+    // only for internal purposes
+    class Spacer: UIView {
+        var space: CGFloat = .zero
+
+        init(pt: CGFloat) {
+            self.space = pt
+            super.init(frame: .zero)
+        }
+        
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+        }
+    }
+    
+    // Don't use .fillEqually with Spacers at the first or latest position.
+    convenience init(_ axis: NSLayoutConstraint.Axis, distribution: UIStackView.Distribution, alignment: UIStackView.Alignment, spacing: CGFloat = .zero, _ arrangedSubviews: [UIView]) {
+        var arrangedSubviews: [UIView] = arrangedSubviews
+        var stackSubviews: [UIView] = []
+        var stackSubviewsSpaces: [UIView : CGFloat] = [:]
+        
+        class EmptyView: UIView {
+            override var intrinsicContentSize: CGSize {
+                return .zero
+            }
+        }
+
+        if arrangedSubviews.first is Spacer {
+            let emptyView = EmptyView(frame: .zero)
+            arrangedSubviews.insert(emptyView, at: 0)
+        }
+
+        if arrangedSubviews.last is Spacer {
+            let emptyView = EmptyView(frame: .zero)
+            arrangedSubviews.append(emptyView)
+        }
+        
+        var lastNotSpacerSubview: UIView! // Is safe really due to previous algo block, arrangedSubviews always have not Spacer at first position.
+        var iterator = arrangedSubviews.makeIterator()
+        while let stackSubview = iterator.next() {
+            if let spacer = stackSubview as? Spacer {
+                stackSubviewsSpaces[lastNotSpacerSubview]! += spacer.space
+            } else {
+                lastNotSpacerSubview = stackSubview
+                stackSubviews.append(lastNotSpacerSubview)
+                stackSubviewsSpaces[lastNotSpacerSubview] = .zero
+            }
+        }
+        
+        self.init(arrangedSubviews: stackSubviews)
+        self.axis = axis
+        self.alignment = alignment
+        self.distribution = distribution
+        self.spacing = spacing
+        
+        for (stackSubview, stackSubviewSpace) in stackSubviewsSpaces {
+            if stackSubviewSpace > .zero {
+                self.setCustomSpacing(stackSubviewSpace, after: stackSubview)
+            }
+        }
+    }
+}
+
+
 class ViewController: UIViewController {
     
     var dataSource: ButtonsCollectionViewDataSource!
     var delegate: ButtonsCollectionViewDelegate!
     
-    lazy var grid: UICollectionView = {
+    lazy var content: UICollectionView = {
         let layout = ButtonsCollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 8
         layout.minimumLineSpacing = 8
@@ -46,10 +112,10 @@ class ViewController: UIViewController {
                 
         button.setContentCompressionResistancePriority(.defaultHigh+1, for: .horizontal)
         button.setContentHuggingPriority(.defaultLow+1, for: .horizontal)
-        let hstack = UIStackView(arrangedSubviews: [label, button])
-        hstack.axis = .horizontal
-        hstack.alignment = .center
-        hstack.spacing = 12
+        let hstack = UIStackView(.horizontal, distribution: .fill, alignment: .center, spacing: 12, [
+            label,
+            button
+        ])
         
         return hstack
     }()
@@ -67,9 +133,11 @@ class ViewController: UIViewController {
             button.heightAnchor.constraint(equalToConstant: 80),
             button.centerXAnchor.constraint(equalTo: buttonSuperview.centerXAnchor),
             button.centerYAnchor.constraint(equalTo: buttonSuperview.centerYAnchor),
+            button.topAnchor.constraint(equalTo: buttonSuperview.topAnchor),
+            button.bottomAnchor.constraint(equalTo: buttonSuperview.bottomAnchor)
         ])
         
-        button.alpha = 0.0
+        button.alpha = .zero
         self.dataSource.selectingDidChanged = { [button] newValue in
             UIView.animate(withDuration: 0.25, delay: 0.0, animations: {
                 button.alpha = newValue ? 1.0 : 0.0
@@ -78,37 +146,33 @@ class ViewController: UIViewController {
                 
         return buttonSuperview
     }()
-        
+    
     override func loadView() {
         // View hierarhy:
         self.view = UIView(frame: UIScreen.main.bounds)
         view.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         
-        view.addSubview(header)
-        view.addSubview(grid)
-        view.addSubview(footer)
+        let hstack = UIStackView(.vertical, distribution: .fill, alignment: .fill, [
+            UIStackView.Spacer(pt: 16),
+            header,
+            UIStackView.Spacer(pt: 24),
+            content,
+            UIStackView.Spacer(pt: 20),
+            footer,
+            UIStackView.Spacer(pt: 34)
+        ])
         
-        // Layout:
-        [header, grid, footer].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-        }
+        view.addSubview(hstack)
         
         let mainBorder = view.layoutMarginsGuide
-        NSLayoutConstraint.activate(
-            [header, grid, footer].flatMap
-            {[
-                $0.rightAnchor.constraint(equalTo: mainBorder.rightAnchor),
-                $0.leftAnchor .constraint(equalTo: mainBorder.leftAnchor),
-            ]}
-        )
+        hstack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-                header.topAnchor.constraint(equalTo: mainBorder.topAnchor, constant: 16),
-                header.bottomAnchor.constraint(equalTo: grid.topAnchor, constant: -24),
-                grid.bottomAnchor.constraint(equalTo: footer.topAnchor),
-                footer.bottomAnchor.constraint(equalTo: mainBorder.bottomAnchor),
-                footer.heightAnchor.constraint(equalToConstant: 20+80+34),
-            
+            hstack.rightAnchor.constraint(equalTo: mainBorder.rightAnchor),
+            hstack.leftAnchor.constraint(equalTo: mainBorder.leftAnchor),
+            hstack.topAnchor.constraint(equalTo: mainBorder.topAnchor),
+            hstack.bottomAnchor.constraint(equalTo: mainBorder.bottomAnchor),
         ])
+
     }
 
     override func viewDidLoad() {
