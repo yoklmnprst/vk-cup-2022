@@ -27,5 +27,5 @@ To evaluate your application, we will use the following criteria:
 * *Минимализм исходного кода*. Мы ожидаем, что для одного экрана приложения вы не будете использовать большое количество библиотек или исходного кода.
 
 ### Demo
-![Demo](Demo.mp4)
+https://user-images.githubusercontent.com/52455150/208963787-dad06ba2-6f8b-4e7d-a972-9554ac8b7c08.mp4
 
