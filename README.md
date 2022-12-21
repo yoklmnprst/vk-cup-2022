@@ -27,5 +27,5 @@ To evaluate your application, we will use the following criteria:
 * *Минимализм исходного кода*. Мы ожидаем, что для одного экрана приложения вы не будете использовать большое количество библиотек или исходного кода.
 
 ### Demo
-![](Demo.mp4)
+![Demo](Demo.mp4)
 
